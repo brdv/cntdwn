@@ -1,6 +1,15 @@
-function init(){
+function init() {
   console.log('initializing cntdwn...');
-  const object = getCntdwnObject();
+  const state = new URLSearchParams(window.location.search)
+    .get('state');
+  let object = JSON.parse(atob(state));
+
+  const left = calculateTotalDays(object) - calculateCompleteDays(new Date(object.startDate || Date.now()));
+  if (!isNaN(left)) {
+    document.querySelector('#cntdwnTo').innerText = `${Math.ceil(left)} days until`;
+  }
+
+  object = getCntdwnObject();
 
   window.addEventListener('resize', () => {
     visualizeCntdwnObject(object);
@@ -10,21 +19,19 @@ function init(){
 }
 
 function getCntdwnObject() {
-  const params = new URLSearchParams(window.location.search);
-  const state = params.get('state');
+  const state = new URLSearchParams(window.location.search)
+    .get('state');
+
   if (state) {
     console.log('cntdwnObject', JSON.parse(atob(state)));
-    const cntdwnObject = cntdwnObjectFromState(state);
-    if (cntdwnObject) {
-      return cntdwnObject;
-    }
+    return cntdwnObjectFromState(state);
   } else {
     return {
       title: 'Days left this year',
       total: 365,
       complete: Math.floor(
         (Date.now() - new Date(new Date().getFullYear(), 0, 0)) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       ),
     };
   }
@@ -32,19 +39,18 @@ function getCntdwnObject() {
 
 function getBaseUrl() {
   const url = window.location.href;
-  const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
-  return baseUrl;
+
+  return url.substring(0, url.lastIndexOf('/') + 1);
 }
 
-function isCompleteInput(object){
+function isCompleteInput(object) {
   return object.title && object.endDate
 }
 
 function calculateTotalDays(object) {
   const startDate = new Date(object.startDate || Date.now());
   const endDate = new Date(object.endDate);
-  const totalIncludingStartdate = Math.ceil(endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
-  return totalIncludingStartdate;
+  return Math.ceil(endDate - startDate) / (1000 * 60 * 60 * 24) + 1;
 }
 
 function calculateCompleteDays(startDate) {
@@ -52,7 +58,7 @@ function calculateCompleteDays(startDate) {
   return complete;
 }
 
-function cntdwnObjectFromState(state){
+function cntdwnObjectFromState(state) {
   let object = JSON.parse(atob(state))
   if (isCompleteInput(object)) {
     const total = calculateTotalDays(object)
@@ -108,7 +114,7 @@ function visualizeCntdwnObject(object) {
     circle.style.width = `${maxSize - 4 - margin - margin}px`;
     circle.style.height = `${maxSize - 4 - margin - margin}px`;
     circle.style.margin = `${margin}px`;
-    
+
     if (i < complete) {
       circle.className = 'circle complete-circle';
     } else {
